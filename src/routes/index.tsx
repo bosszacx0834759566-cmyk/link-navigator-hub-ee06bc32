@@ -36,7 +36,6 @@ export const Route = createFileRoute('/')({
 
 function Explorer() {
   const state = useOloLink();
-  const [workspace, setWorkspace] = useState<WorkspaceId>('dashboard');
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-black text-foreground">
@@ -54,15 +53,6 @@ function Explorer() {
           <GlobeScene state={state} />
         </Suspense>
       </div>
-
-      {/* command status layer */}
-      <TopBar state={state} />
-
-      {/* workspace tabs — system-level workspaces, independent of the sidebar */}
-      <WorkspaceTabs workspace={workspace} onSelect={setWorkspace} />
-
-      {/* workspace-level context readout (no tools, no sidebar pages) */}
-      <WorkspaceContext workspace={workspace} state={state} />
 
 
       {/* LEVEL 2 — navigation rail */}
