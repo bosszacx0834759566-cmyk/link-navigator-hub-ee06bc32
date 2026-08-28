@@ -1,10 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useState } from 'react';
 
 import { useOloLink } from '@/hooks/use-ololink';
 import { TopBar } from '@/components/ololink/top-bar';
 import { Rail } from '@/components/ololink/rail';
-import { WorkspaceTabs } from '@/components/ololink/workspace-tabs';
+import { WorkspaceTabs, type WorkspaceId } from '@/components/ololink/workspace-tabs';
+import { WorkspaceContext } from '@/components/ololink/workspace-context';
 import { ContextPanel } from '@/components/ololink/context-panel';
 import { ObjectCard } from '@/components/ololink/object-card';
 import { Dock } from '@/components/ololink/dock';
@@ -38,6 +39,7 @@ export const Route = createFileRoute('/')({
 
 function Explorer() {
   const state = useOloLink();
+  const [workspace, setWorkspace] = useState<WorkspaceId>('dashboard');
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-black text-foreground">
@@ -59,29 +61,12 @@ function Explorer() {
       {/* command status layer */}
       <TopBar state={state} />
 
-      {/* workspace tabs — system navigation */}
-      <WorkspaceTabs
-        workspace={
-          state.panel === 'intel'
-            ? 'intelligence'
-            : state.panel === 'analytics'
-              ? 'analytics'
-              : state.panel === 'overview'
-                ? 'dashboard'
-                : 'command'
-        }
-        onSelect={(id) =>
-          state.togglePanel(
-            id === 'dashboard'
-              ? 'overview'
-              : id === 'intelligence'
-                ? 'intel'
-                : id === 'analytics'
-                  ? 'analytics'
-                  : 'context'
-          )
-        }
-      />
+      {/* workspace tabs — system-level workspaces, independent of the sidebar */}
+      <WorkspaceTabs workspace={workspace} onSelect={setWorkspace} />
+
+      {/* workspace-level context readout (no tools, no sidebar pages) */}
+      <WorkspaceContext workspace={workspace} state={state} />
+
 
       {/* LEVEL 2 — navigation rail */}
       <Rail

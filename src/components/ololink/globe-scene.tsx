@@ -1894,45 +1894,96 @@ function SceneContent({
   );
 }
 
-const REGION_PRESETS: PresetId[] = ['global', 'thailand', 'united-states'];
-const VIEW_PRESETS: PresetId[] = ['orbit', 'active-link'];
+function ViewMenu({
+  preset,
+  onSelect,
+  tier,
+}: {
+  preset: PresetId | null;
+  onSelect: (id: PresetId) => void;
+  tier: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
 
-function CamGroup({ title, children }: { title: string; children: React.ReactNode }) {
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (!wrap.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    document.addEventListener('mousedown', onDoc);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDoc);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  const pick = (id: PresetId) => {
+    onSelect(id);
+    setOpen(false);
+  };
+
   return (
-    <div className="flex flex-col gap-1">
-      <span className="px-1 font-mono text-[8px] uppercase tracking-[0.24em] text-muted-foreground/50">
-        {title}
-      </span>
-      <div className="flex items-center gap-0.5">{children}</div>
+    <div ref={wrap} className="relative">
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-2 rounded-[8px] border border-white/[0.08] bg-[#070b14]/75 px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.22em] text-sky-100/80 backdrop-blur-md transition-colors hover:border-sky-300/40 hover:text-sky-100"
+      >
+        View
+        <span className="text-[8px] text-sky-200/70" aria-hidden>
+          ▾
+        </span>
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          className="absolute left-1/2 top-[34px] w-[200px] -translate-x-1/2 overflow-hidden rounded-[10px] border border-white/[0.08] bg-[#070b14]/95 py-1 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.95)] backdrop-blur-xl"
+        >
+          {CAMERA_PRESETS.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              role="menuitem"
+              title={p.hint}
+              onClick={() => pick(p.id)}
+              className={`flex w-full items-center justify-between px-3 py-1.5 text-left font-mono text-[9px] uppercase tracking-[0.18em] transition-colors ${
+                preset === p.id
+                  ? 'bg-sky-400/[0.14] text-sky-100'
+                  : 'text-sky-100/60 hover:bg-white/[0.05] hover:text-sky-100'
+              }`}
+            >
+              {p.label} View
+            </button>
+          ))}
+          <span className="my-1 block h-px bg-white/[0.07]" />
+          <button
+            type="button"
+            role="menuitem"
+            title="Return to the optimal readable operational angle"
+            onClick={() => pick('global')}
+            className="block w-full px-3 py-1.5 text-left font-mono text-[9px] uppercase tracking-[0.18em] text-sky-200/70 transition-colors hover:bg-white/[0.05] hover:text-sky-100"
+          >
+            Reset Operational View
+          </button>
+          <span className="my-1 block h-px bg-white/[0.07]" />
+          <div className="flex items-center justify-between px-3 py-1.5">
+            <span className="font-mono text-[8px] uppercase tracking-[0.24em] text-muted-foreground/50">
+              Tier
+            </span>
+            <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-sky-100/70">{tier}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function CamButton({
-  label,
-  hint,
-  active,
-  onClick,
-}: {
-  label: string;
-  hint: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      title={hint}
-      onClick={onClick}
-      aria-pressed={active}
-      className={`rounded-[6px] px-2 py-1 font-mono text-[9px] uppercase tracking-[0.18em] transition-colors ${
-        active ? 'bg-sky-300/15 text-sky-100' : 'text-sky-100/50 hover:bg-white/[0.06] hover:text-sky-100/90'
-      }`}
-    >
-      {label}
-    </button>
-  );
-}
 
 export function GlobeScene({ state }: { state: OloLinkState }) {
   const [lod, setLod] = useState<LodState>({ level: 'global', region: null });
@@ -1967,47 +2018,15 @@ export function GlobeScene({ state }: { state: OloLinkState }) {
         </LodContext.Provider>
       </Canvas>
 
-      {/* camera controls — grouped: region · view · action (kept minimal, off the Earth) */}
+      {/* single compact camera control — everything else lives in its dropdown */}
       <div className="absolute left-1/2 top-[92px] z-20 -translate-x-1/2">
-        <div className="flex items-stretch gap-3 rounded-[10px] border border-white/[0.07] bg-[#070b14]/72 px-2.5 py-1.5 backdrop-blur-md">
-          <CamGroup title="Region">
-            {CAMERA_PRESETS.filter((p) => REGION_PRESETS.includes(p.id)).map((p) => (
-              <CamButton key={p.id} label={p.label} hint={p.hint} active={preset === p.id} onClick={() => goTo(p.id)} />
-            ))}
-          </CamGroup>
-
-          <span className="w-px self-stretch bg-white/[0.08]" />
-
-          <CamGroup title="View">
-            {CAMERA_PRESETS.filter((p) => VIEW_PRESETS.includes(p.id)).map((p) => (
-              <CamButton key={p.id} label={p.label} hint={p.hint} active={preset === p.id} onClick={() => goTo(p.id)} />
-            ))}
-          </CamGroup>
-
-          <span className="w-px self-stretch bg-white/[0.08]" />
-
-          <CamGroup title="Action">
-            <button
-              type="button"
-              title="Return to the optimal readable operational angle"
-              onClick={() => goTo('global')}
-              className="rounded-[6px] border border-sky-300/25 px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.18em] text-sky-200/80 transition-colors hover:border-sky-300/60 hover:text-sky-100"
-            >
-              Operational View
-            </button>
-          </CamGroup>
-
-          <span className="w-px self-stretch bg-white/[0.08]" />
-
-          <div className="flex flex-col justify-between py-[1px] pr-1">
-            <span className="font-mono text-[8px] uppercase tracking-[0.24em] text-muted-foreground/50">Tier</span>
-            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-sky-100/70">
-              {LOD_LABEL[lod.level]}
-              {lod.region ? ` · ${REGION_BY_ID[lod.region]?.short}` : ''}
-            </span>
-          </div>
-        </div>
+        <ViewMenu
+          preset={preset}
+          onSelect={goTo}
+          tier={`${LOD_LABEL[lod.level]}${lod.region ? ` · ${REGION_BY_ID[lod.region]?.short}` : ''}`}
+        />
       </div>
+
     </LabelLayer>
   );
 }
