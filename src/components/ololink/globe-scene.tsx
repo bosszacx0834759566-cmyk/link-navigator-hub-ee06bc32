@@ -2018,47 +2018,15 @@ export function GlobeScene({ state }: { state: OloLinkState }) {
         </LodContext.Provider>
       </Canvas>
 
-      {/* camera controls — grouped: region · view · action (kept minimal, off the Earth) */}
+      {/* single compact camera control — everything else lives in its dropdown */}
       <div className="absolute left-1/2 top-[92px] z-20 -translate-x-1/2">
-        <div className="flex items-stretch gap-3 rounded-[10px] border border-white/[0.07] bg-[#070b14]/72 px-2.5 py-1.5 backdrop-blur-md">
-          <CamGroup title="Region">
-            {CAMERA_PRESETS.filter((p) => REGION_PRESETS.includes(p.id)).map((p) => (
-              <CamButton key={p.id} label={p.label} hint={p.hint} active={preset === p.id} onClick={() => goTo(p.id)} />
-            ))}
-          </CamGroup>
-
-          <span className="w-px self-stretch bg-white/[0.08]" />
-
-          <CamGroup title="View">
-            {CAMERA_PRESETS.filter((p) => VIEW_PRESETS.includes(p.id)).map((p) => (
-              <CamButton key={p.id} label={p.label} hint={p.hint} active={preset === p.id} onClick={() => goTo(p.id)} />
-            ))}
-          </CamGroup>
-
-          <span className="w-px self-stretch bg-white/[0.08]" />
-
-          <CamGroup title="Action">
-            <button
-              type="button"
-              title="Return to the optimal readable operational angle"
-              onClick={() => goTo('global')}
-              className="rounded-[6px] border border-sky-300/25 px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.18em] text-sky-200/80 transition-colors hover:border-sky-300/60 hover:text-sky-100"
-            >
-              Operational View
-            </button>
-          </CamGroup>
-
-          <span className="w-px self-stretch bg-white/[0.08]" />
-
-          <div className="flex flex-col justify-between py-[1px] pr-1">
-            <span className="font-mono text-[8px] uppercase tracking-[0.24em] text-muted-foreground/50">Tier</span>
-            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-sky-100/70">
-              {LOD_LABEL[lod.level]}
-              {lod.region ? ` · ${REGION_BY_ID[lod.region]?.short}` : ''}
-            </span>
-          </div>
-        </div>
+        <ViewMenu
+          preset={preset}
+          onSelect={goTo}
+          tier={`${LOD_LABEL[lod.level]}${lod.region ? ` · ${REGION_BY_ID[lod.region]?.short}` : ''}`}
+        />
       </div>
+
     </LabelLayer>
   );
 }
