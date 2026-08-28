@@ -61,10 +61,26 @@ function Explorer() {
 
       {/* workspace tabs — system navigation */}
       <WorkspaceTabs
-        active={state.panel}
-        onSelect={state.togglePanel}
-        alertCount={state.profile.alerts.length}
-        onAlerts={() => state.togglePanel('alerts')}
+        workspace={
+          state.panel === 'intel'
+            ? 'intelligence'
+            : state.panel === 'analytics'
+              ? 'analytics'
+              : state.panel === 'overview'
+                ? 'dashboard'
+                : 'command'
+        }
+        onSelect={(id) =>
+          state.togglePanel(
+            id === 'dashboard'
+              ? 'overview'
+              : id === 'intelligence'
+                ? 'intel'
+                : id === 'analytics'
+                  ? 'analytics'
+                  : 'context'
+          )
+        }
       />
 
       {/* LEVEL 2 — navigation rail */}
